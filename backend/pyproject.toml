@@ -1,0 +1,37 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "syskey-web"
+version = "0.1.0"
+description = "Desktop/web app for bulk file upload, full-text search, and document tagging — served from the CLI."
+readme = "../README.md"
+license = { text = "MIT" }
+authors = [{ name = "Ivan Manuel" }]
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi>=0.111.0",
+    "uvicorn[standard]>=0.29.0",
+    "sqlalchemy>=2.0.0",
+    "aiosqlite>=0.20.0",
+    "python-multipart>=0.0.9",
+    "pydantic>=2.6.0",
+    "pydantic-settings>=2.2.0",
+    "typer>=0.12.0",
+    "rich>=13.7.0",
+    "aiofiles>=23.2.0",
+]
+
+[project.scripts]
+syskey-web = "syskey.cli:app"
+
+[project.urls]
+Homepage = "https://github.com/sivvis-coding/syskey-web"
+Repository = "https://github.com/sivvis-coding/syskey-web"
+
+[tool.hatch.build.targets.wheel]
+packages = ["syskey"]
+
+[tool.hatch.build.targets.wheel.sources]
+"syskey" = "syskey"
