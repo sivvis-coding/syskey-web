@@ -58,22 +58,37 @@ source .venv/bin/activate        # Windows: .venv\Scripts\activate
 pip install -e "."
 ```
 
-Start the API server (without the compiled frontend):
-
-```bash
-syskey-web --reload
-# API docs: http://127.0.0.1:8000/docs
-```
-
 ### 3. Frontend
 
 ```bash
 cd frontend
 npm install
-npm run dev    # Vite dev server on http://localhost:5173 — proxies /api to :8000
 ```
 
-### 4. Build the frontend and bundle it into the Python package
+### 4. Start both servers with one command
+
+From the repo root, run:
+
+```bash
+make dev
+```
+
+This starts the backend API server (with auto-reload) and the Vite frontend dev server in parallel.
+Press **Ctrl+C** to stop both.
+
+| Server | URL |
+|--------|-----|
+| Backend API | http://127.0.0.1:8000 — API docs at `/docs` |
+| Frontend | http://localhost:5173 — proxies `/api` to `:8000` |
+
+You can also start each server individually:
+
+```bash
+make dev-backend    # FastAPI + uvicorn only
+make dev-frontend   # Vite only
+```
+
+### 5. Build the frontend and bundle it into the Python package
 
 ```bash
 cd frontend
