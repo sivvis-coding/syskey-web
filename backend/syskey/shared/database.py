@@ -30,7 +30,11 @@ async def get_session() -> AsyncSession:  # type: ignore[return]
 
 
 async def init_db() -> None:
-    """Create all tables and the FTS5 virtual table."""
+    """Create all tables and the FTS5 virtual table.
+
+    All feature model modules must be imported before this is called so that
+    their tables are registered on Base.metadata.
+    """
     async with engine.begin() as conn:
         # Create ORM-mapped tables
         await conn.run_sync(Base.metadata.create_all)

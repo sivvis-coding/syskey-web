@@ -6,8 +6,16 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, RedirectResponse
 
-from syskey.api import files, projects, search, tags
-from syskey.db.database import init_db
+from syskey.features.projects.projects_router import router as projects_router
+from syskey.features.files.files_router import router as files_router
+from syskey.features.search.search_router import router as search_router
+from syskey.features.tags.tags_router import router as tags_router
+
+# Import all model modules so Base.metadata is fully populated before init_db
+import syskey.features.projects.projects_models  # noqa: F401
+import syskey.features.files.files_models  # noqa: F401
+import syskey.features.tags.tags_models  # noqa: F401
+from syskey.shared.database import init_db
 
 STATIC_DIR = Path(__file__).parent / "static"
 
@@ -18,10 +26,10 @@ app = FastAPI(
 )
 
 # ── API routes ────────────────────────────────────────────────────────────────
-app.include_router(projects.router, prefix="/api/projects", tags=["projects"])
-app.include_router(files.router, prefix="/api/files", tags=["files"])
-app.include_router(search.router, prefix="/api/search", tags=["search"])
-app.include_router(tags.router, prefix="/api/tags", tags=["tags"])
+app.include_router(projects_router, prefix="/api/projects", tags=["projects"])
+app.include_router(files_router, prefix="/api/files", tags=["files"])
+app.include_router(search_router, prefix="/api/search", tags=["search"])
+app.include_router(tags_router, prefix="/api/tags", tags=["tags"])
 
 
 # ── Startup ───────────────────────────────────────────────────────────────────
