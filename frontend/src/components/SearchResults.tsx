@@ -13,11 +13,21 @@ import {
 import SearchIcon from "@mui/icons-material/Search";
 import axios from "axios";
 
+interface SearchResult {
+  file_id: number;
+  filename: string;
+  snippet: string;
+}
+
+interface HighlightedSnippetProps {
+  snippet: string;
+}
+
 /**
  * Render a snippet string that may contain <mark>…</mark> tags as JSX,
  * highlighting matched terms in yellow.
  */
-function HighlightedSnippet({ snippet }) {
+function HighlightedSnippet({ snippet }: HighlightedSnippetProps) {
   const parts = snippet.split(/(<mark>.*?<\/mark>)/g);
   return (
     <Typography variant="body2" component="p" sx={{ mt: 1, lineHeight: 1.8 }}>
@@ -46,11 +56,11 @@ function HighlightedSnippet({ snippet }) {
 export default function SearchResults() {
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
-  const [results, setResults] = useState([]);
+  const [results, setResults] = useState<SearchResult[]>([]);
   const [searched, setSearched] = useState(false);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSearch = async (e) => {
+  const handleSearch = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!query.trim()) return;
     setLoading(true);
@@ -59,10 +69,16 @@ export default function SearchResults() {
     setSearched(true);
 
     try {
-      const { data } = await axios.get("/api/search/", { params: { q: query, limit: 20 } });
+      const { data } = await axios.get<SearchResult[]>("/api/search/", {
+        params: { q: query, limit: 20 },
+      });
       setResults(data);
-    } catch (err) {
-      setError(err.response?.data?.detail ?? "Search failed. Please try again.");
+    } catch (err: unknown) {
+      const message =
+        axios.isAxiosError(err) && err.response?.data?.detail
+          ? String(err.response.data.detail)
+          : "Search failed. Please try again.";
+      setError(message);
     } finally {
       setLoading(false);
     }

@@ -108,15 +108,17 @@ syskey-web/
 │           └── models.py       # ORM models (FileRecord, TagRecord)
 └── frontend/
     ├── index.html
-    ├── vite.config.js
+    ├── vite.config.ts
+    ├── tsconfig.json
+    ├── tsconfig.node.json
     ├── package.json
     └── src/
-        ├── main.jsx
-        ├── App.jsx
-        ├── theme.js
+        ├── main.tsx
+        ├── App.tsx
+        ├── theme.ts
         └── components/
-            ├── FileUpload.jsx      # Drag & drop upload
-            └── SearchResults.jsx   # Search form + highlighted results
+            ├── FileUpload.tsx      # Drag & drop upload
+            └── SearchResults.tsx   # Search form + highlighted results
 ```
 
 ---

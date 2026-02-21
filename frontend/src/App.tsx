@@ -3,7 +3,13 @@ import { Box, Container, Typography, Divider, Tab, Tabs } from "@mui/material";
 import FileUpload from "./components/FileUpload";
 import SearchResults from "./components/SearchResults";
 
-function TabPanel({ children, value, index }) {
+interface TabPanelProps {
+  children: React.ReactNode;
+  value: number;
+  index: number;
+}
+
+function TabPanel({ children, value, index }: TabPanelProps) {
   return (
     <div role="tabpanel" hidden={value !== index}>
       {value === index && <Box sx={{ pt: 3 }}>{children}</Box>}
@@ -25,7 +31,7 @@ export default function App() {
 
       <Divider sx={{ my: 2 }} />
 
-      <Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ mb: 1 }}>
+      <Tabs value={tab} onChange={(_, v: number) => setTab(v)} sx={{ mb: 1 }}>
         <Tab label="Upload Files" />
         <Tab label="Search" />
       </Tabs>

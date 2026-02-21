@@ -12,12 +12,19 @@ import {
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import axios from "axios";
 
+interface UploadedFile {
+  id: number;
+  filename: string;
+  content_type: string | null;
+  size_bytes: number;
+}
+
 export default function FileUpload() {
   const [uploading, setUploading] = useState(false);
-  const [results, setResults] = useState([]);
-  const [error, setError] = useState(null);
+  const [results, setResults] = useState<UploadedFile[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
-  const onDrop = useCallback(async (acceptedFiles) => {
+  const onDrop = useCallback(async (acceptedFiles: File[]) => {
     if (!acceptedFiles.length) return;
     setUploading(true);
     setError(null);
@@ -27,12 +34,16 @@ export default function FileUpload() {
     acceptedFiles.forEach((file) => formData.append("files", file));
 
     try {
-      const { data } = await axios.post("/api/files/upload", formData, {
+      const { data } = await axios.post<UploadedFile[]>("/api/files/upload", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
       setResults(data);
-    } catch (err) {
-      setError(err.response?.data?.detail ?? "Upload failed. Please try again.");
+    } catch (err: unknown) {
+      const message =
+        axios.isAxiosError(err) && err.response?.data?.detail
+          ? String(err.response.data.detail)
+          : "Upload failed. Please try again.";
+      setError(message);
     } finally {
       setUploading(false);
     }
