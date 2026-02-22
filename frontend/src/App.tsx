@@ -201,13 +201,19 @@ export default function App() {
               <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
                 What would you like to do?
               </Typography>
-              <Grid container spacing={2}>
+              <Grid container spacing={2} alignItems="stretch">
                 {MENU_ITEMS.map((item) => (
-                  <Grid item xs={12} sm={6} key={item.view}>
-                    <Card variant="outlined">
+                  <Grid
+                    item
+                    xs={12}
+                    sm={6}
+                    key={item.view}
+                    sx={{ display: "flex" }}
+                  >
+                    <Card variant="outlined" sx={{ width: "100%" }}>
                       <CardActionArea
                         onClick={() => setProjectView(item.view)}
-                        sx={{ p: 1 }}
+                        sx={{ p: 1, height: "100%" }}
                       >
                         <CardContent sx={{ textAlign: "center", py: 3 }}>
                           {item.icon}
