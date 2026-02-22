@@ -33,7 +33,7 @@ async def index_document(
         ),
         {"fid": file_id, "fname": filename, "content": content},
     )
-    await session.commit()
+    await session.commit()  # commit the FTS entry independently
 
 
 async def search_documents(

@@ -13,8 +13,8 @@ import { useCallback } from "react";
 import { useDropzone } from "react-dropzone";
 import { useFileUpload } from "./hooks/use-file-upload";
 
-export default function FileUpload() {
-  const mutation = useFileUpload();
+export default function FileUpload({ projectId }: { projectId?: number }) {
+  const mutation = useFileUpload(projectId);
 
   const errorMessage = mutation.error
     ? axios.isAxiosError(mutation.error) &&
@@ -30,7 +30,12 @@ export default function FileUpload() {
     [mutation],
   );
 
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop });
+  const { getRootProps, getInputProps, isDragActive, fileRejections } =
+    useDropzone({
+      onDrop,
+      accept: { "application/pdf": [".pdf"] },
+      multiple: true,
+    });
 
   return (
     <Box>
@@ -56,11 +61,18 @@ export default function FileUpload() {
             : "Drag & drop files, or click to select"}
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          Supports any file type. Text files will be indexed for search.
+          Only PDF files are accepted (.pdf)
         </Typography>
       </Paper>
 
       {mutation.isPending && <LinearProgress sx={{ mt: 2 }} />}
+
+      {fileRejections.length > 0 && (
+        <Alert severity="warning" sx={{ mt: 2 }}>
+          The following files were rejected (only PDFs allowed):{" "}
+          {fileRejections.map((r) => r.file.name).join(", ")}
+        </Alert>
+      )}
 
       {errorMessage && (
         <Alert severity="error" sx={{ mt: 2 }}>

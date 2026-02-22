@@ -8,5 +8,6 @@ class FileResponse(BaseModel):
     filename: str
     content_type: str | None
     size_bytes: int
+    project_id: int | None
 
     model_config = {"from_attributes": True}

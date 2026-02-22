@@ -22,6 +22,13 @@ class Project(Base):
         order_by="ProjectKeyword.id",
     )
 
+    files = relationship(
+        "FileRecord",
+        foreign_keys="FileRecord.project_id",
+        back_populates="project",
+        order_by="FileRecord.id",
+    )
+
 
 class ProjectKeyword(Base):
     __tablename__ = "project_keywords"

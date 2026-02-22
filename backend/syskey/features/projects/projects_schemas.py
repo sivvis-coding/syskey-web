@@ -5,6 +5,7 @@ from typing import List
 
 from pydantic import BaseModel
 
+from syskey.features.files.files_schemas import FileResponse
 from syskey.features.projects.projects_models import Project
 
 
@@ -21,6 +22,7 @@ class ProjectResponse(BaseModel):
     name: str
     created_at: datetime
     keywords: List[str]
+    files: List[FileResponse]
 
     model_config = {"from_attributes": True}
 
@@ -31,4 +33,5 @@ class ProjectResponse(BaseModel):
             name=project.name,
             created_at=project.created_at,
             keywords=[kw.keyword for kw in project.keywords],
+            files=[FileResponse.model_validate(f) for f in project.files],
         )

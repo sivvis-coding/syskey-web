@@ -22,3 +22,5 @@ class FileRecord(Base):
     tags = relationship(
         "TagRecord", back_populates="file", cascade="all, delete-orphan"
     )
+
+    project = relationship("Project", back_populates="files", foreign_keys=[project_id])

@@ -1,4 +1,6 @@
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import BarChartIcon from "@mui/icons-material/BarChart";
+import CategoryIcon from "@mui/icons-material/Category";
 import KeyIcon from "@mui/icons-material/Key";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import {
@@ -16,6 +18,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useState } from "react";
+import FileList from "./features/files/file-list";
 import FileUpload from "./features/files/file-upload";
 import KeywordSetup from "./features/keywords/keyword-setup";
 import {
@@ -24,10 +27,17 @@ import {
   useUpdateProjectKeywords,
 } from "./features/projects/hooks/use-projects-mutations";
 import { useProjectsQuery } from "./features/projects/hooks/use-projects-query";
+import ProjectAnalysis from "./features/projects/project-analysis";
+import ProjectClassification from "./features/projects/project-classification";
 import ProjectDashboard from "./features/projects/project-dashboard";
 import { Project } from "./types";
 
-type ProjectView = "menu" | "keywords" | "upload";
+type ProjectView =
+  | "menu"
+  | "keywords"
+  | "upload"
+  | "analysis"
+  | "classification";
 
 const MENU_ITEMS: {
   view: ProjectView;
@@ -47,6 +57,18 @@ const MENU_ITEMS: {
     description: "Upload documents to be indexed and classified.",
     icon: <UploadFileIcon sx={{ fontSize: 40, color: "primary.main" }} />,
   },
+  {
+    view: "analysis",
+    label: "Analysis",
+    description: "See how often each keyword appears across all project files.",
+    icon: <BarChartIcon sx={{ fontSize: 40, color: "primary.main" }} />,
+  },
+  {
+    view: "classification",
+    label: "Classification",
+    description: "Export ZIP of matched or unmatched documents.",
+    icon: <CategoryIcon sx={{ fontSize: 40, color: "primary.main" }} />,
+  },
 ];
 
 export default function App() {
@@ -54,8 +76,16 @@ export default function App() {
   const createMutation = useCreateProject();
   const deleteMutation = useDeleteProject();
   const updateKeywordsMutation = useUpdateProjectKeywords();
-  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [selectedProjectId, setSelectedProjectId] = useState<number | null>(
+    null,
+  );
   const [projectView, setProjectView] = useState<ProjectView>("menu");
+
+  // Always derived from live query data so file/keyword counts stay current
+  const selectedProject =
+    selectedProjectId !== null
+      ? (projects.find((p) => p.id === selectedProjectId) ?? null)
+      : null;
 
   // ── Project actions ──────────────────────────────────────────────────────
   const handleCreateProject = async (name: string) => {
@@ -64,12 +94,12 @@ export default function App() {
   };
 
   const openProject = (project: Project) => {
-    setSelectedProject(project);
+    setSelectedProjectId(project.id);
     setProjectView("menu");
   };
 
   const handleBackToDashboard = () => {
-    setSelectedProject(null);
+    setSelectedProjectId(null);
     setProjectView("menu");
   };
 
@@ -79,11 +109,11 @@ export default function App() {
 
   const handleKeywordsChange = async (keywords: string[]) => {
     if (!selectedProject) return;
-    const updated = await updateKeywordsMutation.mutateAsync({
+    await updateKeywordsMutation.mutateAsync({
       id: selectedProject.id,
       keywords,
     });
-    setSelectedProject(updated);
+    // selectedProject auto-updates from the invalidated projects query
   };
 
   // ── Render ───────────────────────────────────────────────────────────────
@@ -195,21 +225,38 @@ export default function App() {
                           >
                             {item.description}
                           </Typography>
-                          {item.view === "keywords" &&
-                            selectedProject.keywords.length > 0 && (
-                              <Typography
-                                variant="caption"
-                                color="primary"
-                                display="block"
-                                sx={{ mt: 1 }}
-                              >
-                                {selectedProject.keywords.length} keyword
-                                {selectedProject.keywords.length !== 1
-                                  ? "s"
-                                  : ""}{" "}
-                                configured
-                              </Typography>
-                            )}
+                          {item.view === "keywords" && (
+                            <Typography
+                              variant="caption"
+                              color={
+                                selectedProject.keywords.length > 0
+                                  ? "primary"
+                                  : "text.secondary"
+                              }
+                              display="block"
+                              sx={{ mt: 1 }}
+                            >
+                              {selectedProject.keywords.length > 0
+                                ? `${selectedProject.keywords.length} keyword${selectedProject.keywords.length !== 1 ? "s" : ""} configured`
+                                : "No keywords configured yet"}
+                            </Typography>
+                          )}
+                          {item.view === "upload" && (
+                            <Typography
+                              variant="caption"
+                              color={
+                                selectedProject.files.length > 0
+                                  ? "primary"
+                                  : "text.secondary"
+                              }
+                              display="block"
+                              sx={{ mt: 1 }}
+                            >
+                              {selectedProject.files.length > 0
+                                ? `${selectedProject.files.length} file${selectedProject.files.length !== 1 ? "s" : ""} uploaded`
+                                : "No files uploaded yet"}
+                            </Typography>
+                          )}
                         </CardContent>
                       </CardActionArea>
                     </Card>
@@ -228,7 +275,22 @@ export default function App() {
           )}
 
           {/* ── Upload section ── */}
-          {projectView === "upload" && <FileUpload />}
+          {projectView === "upload" && (
+            <>
+              <FileUpload projectId={selectedProject.id} />
+              <FileList />
+            </>
+          )}
+
+          {/* ── Analysis section ── */}
+          {projectView === "analysis" && selectedProject && (
+            <ProjectAnalysis projectId={selectedProject.id} />
+          )}
+
+          {/* ── Classification section ── */}
+          {projectView === "classification" && selectedProject && (
+            <ProjectClassification projectId={selectedProject.id} />
+          )}
         </>
       )}
     </Container>

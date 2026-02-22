@@ -3,6 +3,7 @@
 from typing import List
 
 from fastapi import APIRouter, Depends, status
+from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from syskey.shared.database import get_session
@@ -11,7 +12,10 @@ from syskey.features.projects.projects_schemas import (
     ProjectKeywordsUpdate,
     ProjectResponse,
 )
+from syskey.features.projects.analysis_schemas import AnalysisResponse
 import syskey.features.projects.projects_service as service
+import syskey.features.projects.analysis_service as analysis_service
+import syskey.features.projects.classification_service as classification_service
 
 router = APIRouter()
 
@@ -65,3 +69,72 @@ async def delete_project(
     session: AsyncSession = Depends(get_session),
 ) -> None:
     await service.delete_project(project_id, session)
+
+
+@router.get(
+    "/{project_id}/analysis",
+    response_model=AnalysisResponse,
+    summary="Get the last saved analysis for a project",
+)
+async def get_analysis(
+    project_id: int,
+    session: AsyncSession = Depends(get_session),
+) -> AnalysisResponse:
+    """Returns the last saved analysis result, or an empty response if never run."""
+    saved = await analysis_service.get_saved_analysis(project_id, session)
+    if saved is not None:
+        return saved
+    return AnalysisResponse(project_id=project_id, rows=[], analyzed_at=None)
+
+
+@router.post(
+    "/{project_id}/analysis",
+    response_model=AnalysisResponse,
+    summary="Run analysis and save the results",
+)
+async def run_analysis(
+    project_id: int,
+    session: AsyncSession = Depends(get_session),
+) -> AnalysisResponse:
+    """Runs keyword × file analysis, persists the result, and returns it."""
+    return await analysis_service.run_and_save_analysis(project_id, session)
+
+
+@router.get(
+    "/{project_id}/classification/export/matched",
+    summary="Download ZIP of files with at least one keyword match",
+)
+async def export_matched(
+    project_id: int,
+    session: AsyncSession = Depends(get_session),
+) -> StreamingResponse:
+    data = await classification_service.export_zip(
+        project_id, matched=True, session=session
+    )
+    return StreamingResponse(
+        iter([data]),
+        media_type="application/zip",
+        headers={
+            "Content-Disposition": f"attachment; filename=matched_{project_id}.zip"
+        },
+    )
+
+
+@router.get(
+    "/{project_id}/classification/export/unmatched",
+    summary="Download ZIP of files with no keyword matches",
+)
+async def export_unmatched(
+    project_id: int,
+    session: AsyncSession = Depends(get_session),
+) -> StreamingResponse:
+    data = await classification_service.export_zip(
+        project_id, matched=False, session=session
+    )
+    return StreamingResponse(
+        iter([data]),
+        media_type="application/zip",
+        headers={
+            "Content-Disposition": f"attachment; filename=unmatched_{project_id}.zip"
+        },
+    )

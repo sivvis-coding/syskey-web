@@ -52,3 +52,43 @@ async def init_db() -> None:
                 """
             )
         )
+
+        # Incremental migrations: add columns that may be missing from older DBs
+        existing_cols_result = await conn.execute(text("PRAGMA table_info(files)"))
+        existing_cols = {row[1] for row in existing_cols_result.fetchall()}
+        if "project_id" not in existing_cols:
+            await conn.execute(
+                text(
+                    "ALTER TABLE files ADD COLUMN project_id INTEGER REFERENCES projects(id)"
+                )
+            )
+            await conn.execute(
+                text(
+                    "CREATE INDEX IF NOT EXISTS ix_files_project_id ON files (project_id)"
+                )
+            )
+
+        # Analysis cache table — stores the last computed analysis per project
+        await conn.execute(
+            text(
+                """
+                CREATE TABLE IF NOT EXISTS analysis_cache (
+                    project_id  INTEGER PRIMARY KEY REFERENCES projects(id) ON DELETE CASCADE,
+                    rows_json   TEXT NOT NULL,
+                    snapshot_json TEXT NOT NULL DEFAULT '{}',
+                    analyzed_at DATETIME NOT NULL
+                )
+                """
+            )
+        )
+        # Incremental migration: add snapshot_json if missing (older schema)
+        cache_cols_result = await conn.execute(
+            text("PRAGMA table_info(analysis_cache)")
+        )
+        cache_cols = {row[1] for row in cache_cols_result.fetchall()}
+        if "snapshot_json" not in cache_cols:
+            await conn.execute(
+                text(
+                    "ALTER TABLE analysis_cache ADD COLUMN snapshot_json TEXT NOT NULL DEFAULT '{}'"
+                )
+            )

@@ -164,6 +164,16 @@ export default function ProjectDashboard({
                         ? `${project.keywords.length} keyword${project.keywords.length !== 1 ? "s" : ""}`
                         : "No keywords yet"}
                     </Typography>
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      display="block"
+                      sx={{ mt: 0.25 }}
+                    >
+                      {project.files.length > 0
+                        ? `${project.files.length} file${project.files.length !== 1 ? "s" : ""} uploaded`
+                        : "No files uploaded yet"}
+                    </Typography>
                   </CardContent>
                 </CardActionArea>
               </Card>

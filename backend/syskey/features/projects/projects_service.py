@@ -7,6 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from syskey.features.files.files_models import FileRecord
 from syskey.features.projects.projects_models import Project, ProjectKeyword
 from syskey.features.projects.projects_schemas import ProjectResponse
 
@@ -15,7 +16,7 @@ async def get_project_or_404(project_id: int, session: AsyncSession) -> Project:
     result = await session.execute(
         select(Project)
         .where(Project.id == project_id)
-        .options(selectinload(Project.keywords))
+        .options(selectinload(Project.keywords), selectinload(Project.files))
     )
     project = result.scalar_one_or_none()
     if project is None:
@@ -28,7 +29,7 @@ async def get_project_or_404(project_id: int, session: AsyncSession) -> Project:
 async def list_projects(session: AsyncSession) -> List[ProjectResponse]:
     result = await session.execute(
         select(Project)
-        .options(selectinload(Project.keywords))
+        .options(selectinload(Project.keywords), selectinload(Project.files))
         .order_by(Project.created_at.desc())
     )
     return [ProjectResponse.from_orm(p) for p in result.scalars().all()]
